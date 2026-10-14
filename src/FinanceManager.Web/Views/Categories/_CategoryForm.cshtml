@@ -1,0 +1,45 @@
+@model CategoryFormViewModel
+
+<div class="fm-card form-narrow">
+    <form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" method="post" novalidate>
+        @if (Model.Id != 0)
+        {
+            <input type="hidden" asp-for="Id" />
+        }
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="Name">نام دستهبندی *</label>
+                <input class="form-control" asp-for="Name" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="Kind">کاربرد</label>
+                <select class="form-select" asp-for="Kind">
+                    @foreach (var kind in Enum.GetValues<CategoryKind>())
+                    {
+                        <option value="@((int)kind)" selected="@(Model.Kind == kind)">@Display.CategoryKindLabel(kind)</option>
+                    }
+                </select>
+                <div class="form-text">اگر دستهبندی در تراکنشها استفاده شده باشد، تغییر کاربرد محدود میشود.</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="SortOrder">ترتیب نمایش</label>
+                <input class="form-control" asp-for="SortOrder" dir="ltr" inputmode="numeric" />
+                <span asp-validation-for="SortOrder" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 d-flex align-items-end pb-2">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="IsActive" />
+                    <label class="form-check-label" for="IsActive">دستهبندی فعال است</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">ذخیره</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">انصراف</a>
+        </div>
+    </form>
+</div>

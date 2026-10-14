@@ -1,0 +1,84 @@
+@model CategoryIndexViewModel
+@{
+    ViewData["Title"] = "دستهبندیها";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <span class="text-muted small">دستهبندیها اختیاریاند و برای گزارشگیری استفاده میشوند.</span>
+    <a class="btn btn-primary" asp-action="Create">
+        <i class="bi bi-plus-lg me-1"></i>دستهبندی جدید
+    </a>
+</div>
+
+@if (Model.Categories.Count == 0)
+{
+    <div class="fm-card">
+        <div class="empty-state">
+            <i class="bi bi-tags"></i>
+            <p class="mb-2">هنوز دستهبندیای ثبت نشده است.</p>
+            <a class="btn btn-primary" asp-action="Create">ثبت نخستین دستهبندی</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="fm-card">
+        <div class="table-responsive">
+            <table class="table table-fm">
+                <thead>
+                    <tr>
+                        <th>نام</th>
+                        <th>کاربرد</th>
+                        <th>ترتیب</th>
+                        <th>تراکنشها</th>
+                        <th>وضعیت</th>
+                        <th class="text-end">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <tr class="@(category.IsActive ? "" : "opacity-75")">
+                            <td class="fw-semibold">@category.Name</td>
+                            <td>
+                                <span class="badge @(category.Kind == CategoryKind.Deposit ? "badge-soft-success" : category.Kind == CategoryKind.Withdrawal ? "badge-soft-danger" : "badge-soft-muted")">
+                                    @Display.CategoryKindLabel(category.Kind)
+                                </span>
+                            </td>
+                            <td>@PersianText.ToPersianDigits(category.SortOrder.ToString())</td>
+                            <td>@PersianText.ToPersianDigits(category.TransactionCount.ToString())</td>
+                            <td>
+                                @if (category.IsActive)
+                                {
+                                    <span class="badge badge-soft-success">فعال</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-soft-muted">غیرفعال</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@category.Id" title="ویرایش">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-action="ToggleActive" asp-route-id="@category.Id" method="post" class="d-inline">
+                                    <input type="hidden" name="active" value="@((!category.IsActive).ToString().ToLowerInvariant())" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                            title="@(category.IsActive ? "غیرفعال کردن" : "فعال کردن")">
+                                        <i class="bi @(category.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="Delete" asp-route-id="@category.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('این دستهبندی حذف شود؟ تراکنشهای مرتبط بدون دستهبندی میشوند.');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

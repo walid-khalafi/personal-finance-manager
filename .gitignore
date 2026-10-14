@@ -426,3 +426,19 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+USER.md
+TOOLS.md
+todo.md
+
+# --- Personal finance manager app data ---
+src/FinanceManager.Web/App_Data/
+*.db
+*.db-shm
+*.db-wal
+SOUL.md
+IDENTITY.md
+HEARTBEAT.md
+AGENTS.md
+/.openclaw
+/.openclaw-attachments
+/.agents

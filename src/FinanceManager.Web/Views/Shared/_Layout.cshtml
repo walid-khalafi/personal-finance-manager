@@ -1,0 +1,85 @@
+@{
+    var controller = (string?)ViewContext.RouteData.Values["controller"] ?? "";
+    string Nav(string name) => string.Equals(controller, name, StringComparison.OrdinalIgnoreCase)
+        ? "sidebar-link active"
+        : "sidebar-link";
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] is null ? "مدیر مالی شخصی" : $"{ViewData["Title"]} — مدیر مالی شخصی")</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="appSidebar">
+            <div class="sidebar-brand">
+                <i class="bi bi-wallet2"></i>
+                <span>مدیر مالی</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="@Nav("Dashboard")" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2"></i>داشبورد</a>
+                <a class="@Nav("Accounts")" asp-controller="Accounts" asp-action="Index"><i class="bi bi-bank"></i>حسابها</a>
+                <a class="@Nav("Cards")" asp-controller="Cards" asp-action="Index"><i class="bi bi-credit-card"></i>کارتها</a>
+                <a class="@Nav("Transactions")" asp-controller="Transactions" asp-action="Index"><i class="bi bi-receipt"></i>تراکنشها</a>
+                <a class="@Nav("Transfers")" asp-controller="Transfers" asp-action="Index"><i class="bi bi-arrow-left-right"></i>انتقالها</a>
+                <a class="@Nav("Categories")" asp-controller="Categories" asp-action="Index"><i class="bi bi-tags"></i>دستهبندیها</a>
+                <a class="@Nav("Reports")" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart"></i>گزارشها</a>
+                <a class="@Nav("Settings")" asp-controller="Settings" asp-action="Index"><i class="bi bi-gear"></i>تنظیمات</a>
+            </nav>
+            <div class="sidebar-footer">دادهها فقط روی همین دستگاه ذخیره میشوند.</div>
+        </aside>
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+        <div class="app-main">
+            <header class="topbar">
+                <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="نمایش منو">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h1 class="page-title">@ViewData["Title"]</h1>
+                <div class="dropdown ms-auto">
+                    <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle me-1"></i>@User.Identity?.Name
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" asp-controller="Settings" asp-action="Index">
+                                <i class="bi bi-gear me-1"></i>تنظیمات و گذرواژه
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <form asp-controller="Auth" asp-action="Logout" method="post" class="px-1 m-0">
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-left me-1"></i>خروج
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </header>
+
+            <main class="app-content">
+                <partial name="_Alerts" />
+                @RenderBody()
+            </main>
+
+            <footer class="app-footer">
+                مدیر مالی شخصی — بدون اینترنت هم کار میکند.
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,276 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "داشبورد";
+    var data = Model.Data;
+    var hasAccounts = data.Accounts.Count > 0;
+    var hasMonthly = data.MonthlySeries.Any(m => m.DepositsMinor != 0 || m.WithdrawalsMinor != 0);
+    var hasCategories = data.CategoryDistribution.Count > 0;
+    var chartDecimals = data.ChartCurrencyCode is null ? 0 : CurrencyCatalog.Get(data.ChartCurrencyCode).Decimals;
+    var chartCurrencyName = data.ChartCurrencyName ?? "";
+}
+
+<partial name="_PeriodSelector" model="@(new PeriodSelectorModel
+    {
+        Selection = Model.Selection,
+        CurrencyCode = data.ChartCurrencyCode,
+        Currencies = data.AvailableCurrencies,
+    })" />
+
+@if (Model.Selection.Error is not null)
+{
+    <div class="alert alert-warning small">@Model.Selection.Error</div>
+}
+
+@if (!hasAccounts)
+{
+    <div class="fm-card">
+        <div class="empty-state">
+            <i class="bi bi-bank2"></i>
+            <p class="mb-2">هنوز حساب بانکی ثبت نشده است.</p>
+            <a class="btn btn-primary" asp-controller="Accounts" asp-action="Create">
+                <i class="bi bi-plus-lg me-1"></i>ثبت نخستین حساب
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <h2 class="section-title">موجودی کل (فقط حسابهای فعال)</h2>
+    <div class="row g-3">
+        @foreach (var balance in data.BalancesByCurrency)
+        {
+            <div class="col-sm-6 col-xl-4">
+                <div class="fm-card stat-card">
+                    <div class="stat-icon bg-blue"><i class="bi bi-wallet2"></i></div>
+                    <div>
+                        <div class="stat-label">موجودی کل — @CurrencyCatalog.Get(balance.CurrencyCode).PersianName</div>
+                        <div class="stat-value">@Display.Money(balance.TotalMinor, balance.CurrencyCode) <small>@balance.CurrencyCode</small></div>
+                        <div class="stat-label">@PersianText.ToPersianDigits(balance.AccountCount.ToString()) حساب فعال</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <h2 class="section-title">گردش دوره @Display.DateRange(data.Range)</h2>
+    @if (data.PeriodByCurrency.Count == 0)
+    {
+        <div class="fm-card">
+            <div class="empty-state">
+                <i class="bi bi-calendar-x"></i>
+                در این دوره تراکنشی ثبت نشده است.
+            </div>
+        </div>
+    }
+    else
+    {
+        @foreach (var totals in data.PeriodByCurrency)
+        {
+            var currencyName = CurrencyCatalog.Get(totals.CurrencyCode).PersianName;
+            <div class="row g-3 g-lg-3 mb-3">
+                <div class="col-md-4">
+                    <div class="fm-card stat-card">
+                        <div class="stat-icon bg-green"><i class="bi bi-arrow-down-left-circle"></i></div>
+                        <div>
+                            <div class="stat-label">واریز — @currencyName</div>
+                            <div class="stat-value amount-deposit">@Display.Money(totals.DepositsMinor, totals.CurrencyCode)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="fm-card stat-card">
+                        <div class="stat-icon bg-red"><i class="bi bi-arrow-up-right-circle"></i></div>
+                        <div>
+                            <div class="stat-label">برداشت — @currencyName</div>
+                            <div class="stat-value amount-withdrawal">@Display.Money(totals.WithdrawalsMinor, totals.CurrencyCode)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="fm-card stat-card">
+                        <div class="stat-icon bg-slate"><i class="bi bi-activity"></i></div>
+                        <div>
+                            <div class="stat-label">خالص جریان نقدی — @currencyName</div>
+                            <div class="stat-value @(totals.NetMinor >= 0 ? "amount-deposit" : "amount-withdrawal")">
+                                @Display.Money(totals.NetMinor, totals.CurrencyCode)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    <h2 class="section-title">نمودارها @(data.ChartCurrencyCode is not null ? $"({chartCurrencyName})" : "")</h2>
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="fm-card h-100">
+                <h3 class="h6 fw-bold mb-3">واریز و برداشت ماهانه (۶ ماه اخیر)</h3>
+                @if (hasMonthly)
+                {
+                    <div class="chart-box"><canvas id="monthlyChart" aria-label="نمودار واریز و برداشت ماهانه"></canvas></div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-bar-chart-line"></i>
+                        دادهای برای این نمودار وجود ندارد.
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="fm-card h-100">
+                <h3 class="h6 fw-bold mb-3">توزیع برداشتها در دوره</h3>
+                @if (hasCategories)
+                {
+                    <div class="chart-box"><canvas id="categoryChart" aria-label="نمودار توزیع دستهبندیها"></canvas></div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-pie-chart"></i>
+                        برداشتی با دستهبندی در این دوره ثبت نشده است.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">آخرین تراکنشها</h2>
+    <div class="fm-card">
+        <partial name="_TransactionTable" model="@(new TransactionTableModel
+            {
+                Items = data.RecentTransactions,
+                ShowActions = false,
+            })" />
+        <div class="text-start mt-2">
+            <a asp-controller="Transactions" asp-action="Index" class="small">مشاهده همه تراکنشها</a>
+        </div>
+    </div>
+
+    <h2 class="section-title">حسابها</h2>
+    <div class="fm-card">
+        <div class="table-responsive">
+            <table class="table table-fm">
+                <thead>
+                    <tr>
+                        <th>حساب</th>
+                        <th>بانک</th>
+                        <th>نوع</th>
+                        <th>موجودی</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var account in data.Accounts)
+                    {
+                        <tr>
+                            <td>@account.Title</td>
+                            <td>@account.BankName</td>
+                            <td>@Display.AccountTypeLabel(account.Type)</td>
+                            <td class="text-nowrap">@Display.Money(account.BalanceMinor, account.CurrencyCode) <small class="text-muted">@account.CurrencyCode</small></td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary" asp-controller="Transactions" asp-action="Index"
+                                   asp-route-accountId="@account.AccountId">تراکنشها</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (hasMonthly)
+    {
+        <script>
+            (function () {
+                const monthly = @Json.Serialize(data.MonthlySeries.Select(m => new { label = m.Label, deposits = m.DepositsMinor, withdrawals = m.WithdrawalsMinor }));
+                const decimals = @chartDecimals;
+                const currencyName = @Json.Serialize(chartCurrencyName);
+                const el = document.getElementById('monthlyChart');
+                if (!el) { return; }
+                new Chart(el, {
+                    type: 'bar',
+                    data: {
+                        labels: monthly.map(m => m.label),
+                        datasets: [
+                            {
+                                label: 'واریز',
+                                data: monthly.map(m => m.deposits),
+                                backgroundColor: 'rgba(12, 166, 120, .72)',
+                                borderRadius: 6,
+                                maxBarThickness: 34
+                            },
+                            {
+                                label: 'برداشت',
+                                data: monthly.map(m => m.withdrawals),
+                                backgroundColor: 'rgba(224, 49, 49, .68)',
+                                borderRadius: 6,
+                                maxBarThickness: 34
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: function (v) { return FM.formatMoney(v, decimals, ''); } } },
+                            x: { grid: { display: false } }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function (ctx) {
+                                        return ctx.dataset.label + ': ' + FM.formatMoney(ctx.parsed.y, decimals, currencyName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })();
+        </script>
+    }
+    @if (hasCategories)
+    {
+        <script>
+            (function () {
+                const cats = @Json.Serialize(data.CategoryDistribution.Select(s => new { name = s.Name, total = s.TotalMinor, count = s.Count }));
+                const decimals = @chartDecimals;
+                const currencyName = @Json.Serialize(chartCurrencyName);
+                const el = document.getElementById('categoryChart');
+                if (!el) { return; }
+                new Chart(el, {
+                    type: 'doughnut',
+                    data: {
+                        labels: cats.map(c => c.name),
+                        datasets: [{
+                            data: cats.map(c => c.total),
+                            backgroundColor: cats.map((c, i) => FM.palette[i % FM.palette.length]),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '60%',
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (ctx) {
+                                        return ctx.label + ': ' + FM.formatMoney(ctx.parsed, decimals, currencyName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })();
+        </script>
+    }
+}

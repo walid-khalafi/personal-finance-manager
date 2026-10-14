@@ -1,0 +1,107 @@
+@model MonthlyReportViewModel
+@{
+    ViewData["Title"] = "گزارش ماهانه";
+    var decimals = CurrencyCatalog.Get(Model.CurrencyCode).Decimals;
+    var currencyName = CurrencyCatalog.Get(Model.CurrencyCode).PersianName;
+    var hasData = Model.Points.Any(p => p.DepositsMinor != 0 || p.WithdrawalsMinor != 0);
+}
+
+<partial name="_PeriodSelector" model="@(new PeriodSelectorModel
+    {
+        Selection = Model.Selection,
+        CurrencyCode = Model.CurrencyCode,
+        Currencies = Model.Currencies,
+    })" />
+
+@if (Model.Selection.Error is not null)
+{
+    <div class="alert alert-warning small">@Model.Selection.Error</div>
+}
+
+@if (Model.Points.Count == 0 || !hasData)
+{
+    <div class="fm-card">
+        <div class="empty-state">
+            <i class="bi bi-bar-chart-line"></i>
+            در این دوره تراکنشی (بدون انتقال) برای نمایش وجود ندارد.
+        </div>
+    </div>
+}
+else
+{
+    <div class="fm-card mb-3">
+        <h3 class="h6 fw-bold mb-3">واریز، برداشت و خالص ماهانه (@currencyName)</h3>
+        <div class="chart-box"><canvas id="monthlyReportChart" aria-label="نمودار ماهانه"></canvas></div>
+    </div>
+
+    <div class="fm-card">
+        <div class="table-responsive">
+            <table class="table table-fm">
+                <thead>
+                    <tr>
+                        <th>ماه</th>
+                        <th>واریزها</th>
+                        <th>برداشتها</th>
+                        <th>خالص</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var point in Model.Points)
+                    {
+                        <tr>
+                            <td>@point.Label</td>
+                            <td class="amount-deposit text-nowrap">@Display.Money(point.DepositsMinor, Model.CurrencyCode)</td>
+                            <td class="amount-withdrawal text-nowrap">@Display.Money(point.WithdrawalsMinor, Model.CurrencyCode)</td>
+                            <td class="text-nowrap fw-bold @(point.NetMinor >= 0 ? "amount-deposit" : "amount-withdrawal")">
+                                @Display.Money(point.NetMinor, Model.CurrencyCode)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (Model.Points.Count > 0 && hasData)
+    {
+        <script>
+            (function () {
+                const points = @Json.Serialize(Model.Points.Select(p => new { label = p.Label, deposits = p.DepositsMinor, withdrawals = p.WithdrawalsMinor, net = p.NetMinor }));
+                const decimals = @decimals;
+                const currencyName = @Json.Serialize(currencyName);
+                const el = document.getElementById('monthlyReportChart');
+                if (!el) { return; }
+                new Chart(el, {
+                    type: 'bar',
+                    data: {
+                        labels: points.map(p => p.label),
+                        datasets: [
+                            { label: 'واریز', data: points.map(p => p.deposits), backgroundColor: 'rgba(12, 166, 120, .72)', borderRadius: 6, maxBarThickness: 30 },
+                            { label: 'برداشت', data: points.map(p => p.withdrawals), backgroundColor: 'rgba(224, 49, 49, .68)', borderRadius: 6, maxBarThickness: 30 },
+                            { type: 'line', label: 'خالص', data: points.map(p => p.net), borderColor: '#2f6fed', backgroundColor: '#2f6fed', tension: .3, pointRadius: 3, borderWidth: 2 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: function (v) { return FM.formatMoney(v, decimals, ''); } } },
+                            x: { grid: { display: false } }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function (ctx) {
+                                        return ctx.dataset.label + ': ' + FM.formatMoney(ctx.parsed.y, decimals, currencyName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })();
+        </script>
+    }
+}

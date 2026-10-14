@@ -1,0 +1,41 @@
+@model PeriodSelectorModel
+<form method="get" class="filter-bar row g-2 align-items-end">
+    <div class="col-6 col-md-3 col-lg-2">
+        <label class="form-label" for="period">دوره</label>
+        <select class="form-select" id="period" name="period" data-period-select>
+            @foreach (var kind in Enum.GetValues<PeriodKind>())
+            {
+                <option value="@((int)kind)" selected="@(Model.Selection.Kind == kind)">@Display.PeriodLabel(kind)</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2" data-custom-field>
+        <label class="form-label" for="from">از تاریخ</label>
+        <input class="form-control" id="from" name="from" value="@Model.Selection.FromText"
+               placeholder="۱۴۰۳/۰۷/۰۱" inputmode="numeric" autocomplete="off" />
+    </div>
+    <div class="col-6 col-md-3 col-lg-2" data-custom-field>
+        <label class="form-label" for="to">تا تاریخ</label>
+        <input class="form-control" id="to" name="to" value="@Model.Selection.ToText"
+               placeholder="۱۴۰۳/۰۷/۳۰" inputmode="numeric" autocomplete="off" />
+    </div>
+    @if (Model.CurrencyCode is not null && Model.Currencies.Count > 0)
+    {
+        <div class="col-6 col-md-3 col-lg-2">
+            <label class="form-label" for="currency">ارز</label>
+            <select class="form-select" id="currency" name="currency">
+                @foreach (var c in Model.Currencies)
+                {
+                    <option value="@c" selected="@(string.Equals(c, Model.CurrencyCode, StringComparison.OrdinalIgnoreCase))">
+                        @CurrencyCatalog.Get(c).PersianName (@c)
+                    </option>
+                }
+            </select>
+        </div>
+    }
+    <div class="col-12 col-md-auto">
+        <button class="btn btn-primary" type="submit">
+            <i class="bi bi-funnel me-1"></i>اعمال
+        </button>
+    </div>
+</form>

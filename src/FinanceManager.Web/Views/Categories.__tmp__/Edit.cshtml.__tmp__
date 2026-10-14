@@ -1,0 +1,5 @@
+@model CategoryFormViewModel
+@{
+    ViewData["Title"] = "ویرایش دستهبندی";
+}
+<partial name="_CategoryForm" model="Model" />

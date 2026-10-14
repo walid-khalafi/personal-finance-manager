@@ -1,0 +1,5 @@
+@model CardFormViewModel
+@{
+    ViewData["Title"] = "کارت جدید";
+}
+<partial name="_CardForm" model="Model" />

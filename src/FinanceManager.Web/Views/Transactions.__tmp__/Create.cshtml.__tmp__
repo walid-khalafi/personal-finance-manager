@@ -1,5 +1,0 @@
-@model TransactionFormViewModel
-@{
-    ViewData["Title"] = "تراکنش جدید";
-}
-<partial name="_TransactionForm" model="Model" />

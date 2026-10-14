@@ -1,5 +1,0 @@
-@model CardFormViewModel
-@{
-    ViewData["Title"] = "ویرایش کارت";
-}
-<partial name="_CardForm" model="Model" />

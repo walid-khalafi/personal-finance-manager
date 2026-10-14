@@ -1,5 +1,0 @@
-@model AccountFormViewModel
-@{
-    ViewData["Title"] = "حساب جدید";
-}
-<partial name="_AccountForm" model="Model" />

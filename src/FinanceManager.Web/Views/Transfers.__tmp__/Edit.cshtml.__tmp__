@@ -1,5 +1,0 @@
-@model TransferFormViewModel
-@{
-    ViewData["Title"] = "ویرایش انتقال";
-}
-<partial name="_TransferForm" model="Model" />

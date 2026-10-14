@@ -1,9 +1,0 @@
-@{
-    ViewData["Title"] = "خطا";
-}
-<div class="empty-state">
-    <i class="bi bi-exclamation-octagon"></i>
-    <h2 class="h5">خطایی رخ داد</h2>
-    <p>مشکلی در پردازش درخواست پیش آمد. لطفاً دوباره تلاش کنید؛ اگر خطا ادامه داشت، برنامه را دوباره اجرا کنید.</p>
-    <a class="btn btn-primary" asp-controller="Dashboard" asp-action="Index">بازگشت به داشبورد</a>
-</div>

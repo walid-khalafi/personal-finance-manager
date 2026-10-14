@@ -1,0 +1,61 @@
+@model SummaryViewModel
+@{
+    ViewData["Title"] = "خلاصه مالی";
+}
+
+<partial name="_PeriodSelector" model="@(new PeriodSelectorModel { Selection = Model.Selection })" />
+
+@if (Model.Selection.Error is not null)
+{
+    <div class="alert alert-warning small">@Model.Selection.Error</div>
+}
+
+@if (Model.Rows.Count == 0)
+{
+    <div class="fm-card">
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            برای این دوره دادهای وجود ندارد. ابتدا حساب و تراکنش ثبت کنید.
+        </div>
+    </div>
+}
+else
+{
+    @foreach (var row in Model.Rows)
+    {
+        var currencyName = CurrencyCatalog.Get(row.CurrencyCode).PersianName;
+        <div class="fm-card mb-3">
+            <h3 class="h6 fw-bold mb-3">@currencyName <small class="text-muted">@row.CurrencyCode</small></h3>
+            <div class="row g-3">
+                <div class="col-6 col-md-2">
+                    <div class="stat-label">موجودی آغاز دوره</div>
+                    <div class="fw-bold">@Display.Money(row.OpeningMinor, row.CurrencyCode)</div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="stat-label">واریزها</div>
+                    <div class="fw-bold amount-deposit">@Display.Money(row.DepositsMinor, row.CurrencyCode)</div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="stat-label">برداشتها</div>
+                    <div class="fw-bold amount-withdrawal">@Display.Money(row.WithdrawalsMinor, row.CurrencyCode)</div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="stat-label">خالص جریان نقدی</div>
+                    <div class="fw-bold @(row.NetMinor >= 0 ? "amount-deposit" : "amount-withdrawal")">@Display.Money(row.NetMinor, row.CurrencyCode)</div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="stat-label">موجودی پایان دوره</div>
+                    <div class="fw-bold">@Display.Money(row.ClosingMinor, row.CurrencyCode)</div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="stat-label">تعداد تراکنش</div>
+                    <div class="fw-bold">@PersianText.ToPersianDigits(row.TransactionCount.ToString())</div>
+                </div>
+            </div>
+            <div class="text-muted small mt-3">
+                موجودی پایان = موجودی آغاز + واریزها − برداشتها؛ انتقالهای داخلی در این جمعها خنثی میشوند.
+                موجودی اولیه حسابها بهعنوان واریز این دوره شمرده نمیشود.
+            </div>
+        </div>
+    }
+}

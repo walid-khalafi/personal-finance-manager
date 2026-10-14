@@ -1,0 +1,11 @@
+@using FinanceManager.Web
+@using FinanceManager.Web.Helpers
+@using FinanceManager.Web.ViewModels
+@using FinanceManager.Infrastructure.Contracts
+@using FinanceManager.Core.Entities
+@using FinanceManager.Core.Common
+@using FinanceManager.Core.Money
+@using FinanceManager.Core.Text
+@using FinanceManager.Core.Time
+@using Microsoft.AspNetCore.WebUtilities
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

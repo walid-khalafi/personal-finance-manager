@@ -1,0 +1,5 @@
+@model TransactionFormViewModel
+@{
+    ViewData["Title"] = "ویرایش تراکنش";
+}
+<partial name="_TransactionForm" model="Model" />

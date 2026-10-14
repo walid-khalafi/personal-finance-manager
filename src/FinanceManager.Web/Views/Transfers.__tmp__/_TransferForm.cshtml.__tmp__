@@ -1,0 +1,78 @@
+@model TransferFormViewModel
+@{
+    var accounts = ViewData["Accounts"] as List<Account> ?? [];
+}
+
+<div class="fm-card form-narrow">
+    <form asp-action="@(Model.GroupId == Guid.Empty ? "Create" : "Edit")" method="post" novalidate>
+        @if (Model.GroupId != Guid.Empty)
+        {
+            <input type="hidden" asp-for="GroupId" />
+        }
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="FromAccountId">از حساب (مبدأ) *</label>
+                <select class="form-select" asp-for="FromAccountId" data-transfer-from>
+                    <option value="0">— انتخاب حساب —</option>
+                    @foreach (var account in accounts)
+                    {
+                        <option value="@account.Id" data-currency="@account.CurrencyCode" selected="@(Model.FromAccountId == account.Id)">
+                            @account.Title — @account.BankName (@account.CurrencyCode)@(account.IsActive ? "" : " [غیرفعال]")
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="FromAccountId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="ToAccountId">به حساب (مقصد) *</label>
+                <select class="form-select" asp-for="ToAccountId" data-transfer-to>
+                    <option value="0">— انتخاب حساب —</option>
+                    @foreach (var account in accounts)
+                    {
+                        <option value="@account.Id" data-currency="@account.CurrencyCode" selected="@(Model.ToAccountId == account.Id)">
+                            @account.Title — @account.BankName (@account.CurrencyCode)@(account.IsActive ? "" : " [غیرفعال]")
+                        </option>
+                    }
+                </select>
+                <div class="form-text">فقط حسابهای با ارز مشابه مبدأ نمایش داده میشوند.</div>
+                <span asp-validation-for="ToAccountId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="Amount">مبلغ *</label>
+                <input class="form-control" asp-for="Amount" dir="ltr" inputmode="decimal" placeholder="0" />
+                <div class="form-text">مبلغ در واحد ارز حساب مبدأ</div>
+                <span asp-validation-for="Amount" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="Date">تاریخ انتقال *</label>
+                <input class="form-control" asp-for="Date" placeholder="۱۴۰۳/۰۷/۲۲" inputmode="numeric" autocomplete="off" />
+                <span asp-validation-for="Date" class="text-danger small"></span>
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="Description">شرح (اختیاری)</label>
+                <input class="form-control" asp-for="Description" />
+                <div class="form-text">اگر خالی بماند، شرح خودکار «انتقال به/از ...» ثبت میشود.</div>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+
+            @if (Model.FromTransactionId is not null && Model.ToTransactionId is not null)
+            {
+                <div class="col-12">
+                    <div class="alert alert-light border small mb-0">
+                        اقلام دفتر کل این انتقال:
+                        <a asp-controller="Transactions" asp-action="Details" asp-route-id="@Model.FromTransactionId">برداشت از مبدأ</a>
+                        —
+                        <a asp-controller="Transactions" asp-action="Details" asp-route-id="@Model.ToTransactionId">واریز به مقصد</a>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">ذخیره</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">انصراف</a>
+        </div>
+    </form>
+</div>

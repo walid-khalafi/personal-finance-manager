@@ -1,0 +1,74 @@
+@model CardFormViewModel
+@{
+    var accounts = ViewData["Accounts"] as List<Account> ?? [];
+}
+
+<div class="fm-card form-narrow">
+    <form asp-action="@(Model.Id == 0 ? "Create" : "Edit")" method="post" novalidate>
+        @if (Model.Id != 0)
+        {
+            <input type="hidden" asp-for="Id" />
+        }
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="AccountId">حساب مرتبط *</label>
+                <select class="form-select" asp-for="AccountId">
+                    <option value="0">— انتخاب حساب —</option>
+                    @foreach (var account in accounts)
+                    {
+                        <option value="@account.Id" selected="@(Model.AccountId == account.Id)">
+                            @account.BankName — @account.Title (@account.CurrencyCode)@(account.IsActive ? "" : " [غیرفعال]")
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="AccountId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="Nickname">نام کارت *</label>
+                <input class="form-control" asp-for="Nickname" />
+                <div class="form-text">مثل «کارت اصلی» یا «کارت خرید»</div>
+                <span asp-validation-for="Nickname" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="Last4">چهار رقم آخر *</label>
+                <input class="form-control" asp-for="Last4" dir="ltr" inputmode="numeric" maxlength="4" placeholder="1234" />
+                <div class="form-text">فقط چهار رقم آخر؛ شماره کامل و CVV هرگز ذخیره نمیشود.</div>
+                <span asp-validation-for="Last4" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="ExpiryMonth">ماه انقضا</label>
+                <select class="form-select" asp-for="ExpiryMonth">
+                    <option value="">—</option>
+                    @for (var month = 1; month <= 12; month++)
+                    {
+                        <option value="@month" selected="@(Model.ExpiryMonth == month)">@PersianText.ToPersianDigits(month.ToString("00"))</option>
+                    }
+                </select>
+                <span asp-validation-for="ExpiryMonth" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="ExpiryYear">سال انقضا</label>
+                <input class="form-control" asp-for="ExpiryYear" dir="ltr" inputmode="numeric" placeholder="1404" />
+                <span asp-validation-for="ExpiryYear" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 d-flex align-items-end pb-2">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="IsActive" />
+                    <label class="form-check-label" for="IsActive">کارت فعال است</label>
+                </div>
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="Notes">یادداشت</label>
+                <textarea class="form-control" asp-for="Notes" rows="2"></textarea>
+                <span asp-validation-for="Notes" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">ذخیره</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">انصراف</a>
+        </div>
+    </form>
+</div>
